@@ -2,7 +2,7 @@ IRC-PGP
 =======
 IRC-PGP encryption project - Software Dev 4th - IT Carlow
 
-irc-client script : 
+irc-client script 
 --------------------
 
 |  Short form          | Long form     | Explanation              |
