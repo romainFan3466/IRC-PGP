@@ -8,8 +8,12 @@
 import sys
 import socket
 import irc.client
+import irc.buffer
 import jaraco.logging
 import argparse
+import threading
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -50,12 +54,14 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def listen_to(connection):
     soc = connection.socket
     buf = ''
     while connection.is_connected():
         buf = soc.recv(1024).decode("utf-8")
         print(buf)
+
 
 def send_it(connection, target):
     while 1:
@@ -67,7 +73,8 @@ def send_it(connection, target):
 
 
 def main():
-
+    #jaraco.logging.log_level("DEBUG")
+    #logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     args = parse_args()
     port = args.port
     nickname = args.nickname
@@ -77,12 +84,18 @@ def main():
 
 
     reactor = irc.client.Reactor()
+
     try:
-        c = reactor.server().connect(server, port, nickname,password=password)
+        c = reactor.server()
+        c.connect(server, port, nickname,password=password)
+
         c.join(target)
+        c.set_keepalive(60)
 
         if args.mode == "listener":
-            listen_to(c)
+            t = threading.Thread(target=listen_to, args=(c,))
+            t.start()
+
         elif args.mode == "sender":
             send_it(c, target)
         else:
