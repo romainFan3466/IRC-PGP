@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Widget</class>
+ <widget class="QWidget" name="Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>871</width>
+    <height>672</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Widget</string>
+  </property>
+  <widget class="QListWidget" name="listWidget">
+   <property name="geometry">
+    <rect>
+     <x>670</x>
+     <y>30</y>
+     <width>161</width>
+     <height>381</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>bots1</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QTextEdit" name="textEdit_2">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>480</y>
+     <width>621</width>
+     <height>151</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>510</y>
+     <width>99</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Send</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_2">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>550</y>
+     <width>99</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_3">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>590</y>
+     <width>99</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Disconnect</string>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="textEdit">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>30</y>
+     <width>591</width>
+     <height>381</height>
+    </rect>
+   </property>
+   <property name="html">
+    <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam ullamcorper, sapien et sagittis sagittis, tortor purus tempus erat, sed aliquam ipsum justo commodo mauris. Vestibulum quis ligula imperdiet, rhoncus felis quis, vehicula lacus. Ut tincidunt, purus non venenatis tincidunt, diam diam tincidunt turpis, et dictum lectus turpis nec ante. Vivamus interdum tincidunt tellus, molestie aliquam nunc ultricies sit amet. In eu odio eget risus semper maximus. Pellentesque et lacus vel lacus efficitur molestie. Ut sapien elit, tincidunt et nisl sed, volutpat molestie ipsum. Mauris rhoncus lacus laoreet, suscipit eros id, pulvinar elit. Quisque porta tristique magna, vitae posuere ante auctor at.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Duis non libero maximus purus rhoncus efficitur. Nam sodales luctus magna ac pulvinar. Suspendisse orci eros, aliquam ac metus non, elementum blandit lacus. Quisque venenatis turpis eget massa finibus, efficitur porta erat tristique. Sed ac pretium arcu, nec vestibulum nunc. Phasellus egestas rhoncus quam, sit amet luctus risus rutrum nec. Proin pellentesque laoreet auctor. Pellentesque commodo ultrices nisi, at elementum ipsum. Mauris bibendum pulvinar lectus id maximus.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Phasellus in ultricies lectus. Nulla dictum tristique lorem. Quisque arcu purus, scelerisque non pulvinar porta, facilisis sed orci. Vestibulum efficitur pharetra lorem sit amet malesuada. Sed id malesuada elit. Sed nec porttitor ligula, non accumsan turpis. Pellentesque bibendum leo augue, sit amet pellentesque enim sodales ut. Fusce finibus rutrum ornare. Sed ultrices neque tortor, ac tincidunt leo eleifend sit amet. Donec eu tincidunt purus. Nunc sed lacinia massa.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Aenean eu felis sit amet neque posuere luctus vitae non est. Nunc ipsum turpis, ultrices a hendrerit et, bibendum in eros. Aenean et felis mauris. Vestibulum dolor nulla, blandit eleifend risus ac, commodo aliquet velit. Integer maximus sapien ut nulla tempus egestas. Morbi et aliquam lacus, quis tempus ligula. Donec pretium efficitur neque, vitae pellentesque purus porttitor eget.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Etiam eu pellentesque tellus, at aliquet tellus. Cras varius luctus nisl. Aliquam egestas odio non nibh porta, eu vestibulum velit egestas. Donec quis congue felis. Donec imperdiet dolor id purus bibendum, id viverra ante rutrum. Aenean id laoreet nibh, eget suscipit massa. Duis vitae ex efficitur leo imperdiet vulputate sed eget metus. Vivamus vel ipsum eu risus malesuada cursus. Donec ac purus vehicula, venenatis odio vitae, facilisis velit. Vivamus eleifend orci in nunc suscipit tristique. Donec a congue sapien.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+</ui>
