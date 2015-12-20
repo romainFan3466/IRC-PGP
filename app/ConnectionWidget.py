@@ -10,12 +10,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 from app.ChatWidget import ChatWidget
+from app.handlers.IrcHandler import IRChandler
 
 class ConnectionWidget(QtWidgets.QWidget):
+
+    ircHandler  = None
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.setupUi(self)
+        self.fillData()
 
 
     def setupUi(self, Widget):
@@ -98,10 +102,22 @@ class ConnectionWidget(QtWidgets.QWidget):
 
 
     def connect(self):
-        if self.widget2 is None:
-            self.widget2 = ChatWidget(self)
-        self.widget2.show()
-        self.hide()
+        server = self.serverText.text().split("/")
+        host = server[0]
+        port = int(server[1])
+        password = self.serverPasswordText.text()
+        nick = self.nicknameText.text()
+        channel = self.channelText.text()
+
+        self.ircHandler = IRChandler(host, nick, port)
+
+        if self.ircHandler.connect():
+            self.ircHandler.join(channel)
+            self.widget2 = ChatWidget(self, self.ircHandler)
+            self.widget2.show()
+            self.hide()
+        else :
+            self.printError("Connection error")
 
 
     def printError(self, str):
@@ -121,9 +137,17 @@ class ConnectionWidget(QtWidgets.QWidget):
         self.apiPasswordLabel.setText("Password")
         self.connectButton.setText("Connect")
 
+    def fillData(self):
+        self.serverText.setText("127.0.0.1/6666")
+        self.nicknameText.setText("bot1")
+        self.channelText.setText('#1')
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     ex = ConnectionWidget()
     ex.show()
     sys.exit(app.exec_())
+
+
+

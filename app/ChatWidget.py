@@ -9,12 +9,24 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
+from app.handlers.IrcHandler import IRChandler
+import threading
+import time
 
 class ChatWidget(QtWidgets.QWidget):
-    def __init__(self, widget):
+    buffer = None
+    __signal = False
+
+    def __init__(self, widget, ircHandler):
         QtWidgets.QWidget.__init__(self)
+        self.irc = ircHandler
         self.setupUi(self)
         self.widgetParent = widget
+        self.buffer = threading.Thread(target=self.runBuffer)
+        self.__signal = True
+        self.buffer.start()
+
+
 
 
     def setupUi(self, Widget):
@@ -36,6 +48,7 @@ class ChatWidget(QtWidgets.QWidget):
         self.sendButton = QtWidgets.QPushButton(Widget)
         self.sendButton.setGeometry(QtCore.QRect(710, 510, 99, 27))
         self.sendButton.setObjectName("sendButton")
+        self.sendButton.clicked.connect(self.sendMessage)
 
         self.resetButton = QtWidgets.QPushButton(Widget)
         self.resetButton.setGeometry(QtCore.QRect(710, 550, 99, 27))
@@ -54,6 +67,7 @@ class ChatWidget(QtWidgets.QWidget):
 
         self.retranslateUi(Widget)
         QtCore.QMetaObject.connectSlotsByName(Widget)
+
 
     def disconnect(self):
         self.widgetParent.show()
@@ -78,9 +92,24 @@ class ChatWidget(QtWidgets.QWidget):
         self.channelMessages.append("<span>Romain</span></br>")
         self.channelMessages.append("<span>c moi </span></br>")
 
+    def sendMessage(self):
+        message = self.messageBox.toPlainText()
+        self.irc.sendMessage(message)
+        self.messageBox.clear()
 
+    def runBuffer(self):
+        while self.__signal :
+            buf = self.irc.getBuffer()
+            old_buf = self.channelMessages.toPlainText()
+            if not buf == old_buf:
+                self.channelMessages.append(buf)
+            time.sleep(1)
 
+    def closeEvent(self, QCloseEvent):
+        if self.buffer.isAlive():
+            self.__signal = False
 
+        self.irc.stop()
 # if __name__ == "__main__":
 #     app = QtWidgets.QApplication(sys.argv)
 #     ex = ChatWidget()
