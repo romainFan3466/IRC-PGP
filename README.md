@@ -14,3 +14,27 @@ irc-client script
 | `-nick` | `--nickname` |Client nickname | |
 |`-po`| `--port` | IRC Server port. | 6666 |
 |`-pw`|`--password`| IRC Server password if required | |
+
+
+Executable
+--------------
+An executable has been compiled and no libraries are required. 
+Unzip `ConnectionWidget.zip` then move into the folder ConnectionWidget
+
+Then run the executable : 
+    
+    ./ConnectionWidget
+
+
+Script
+--------
+To execute the script, move into `app` folder then run : 
+
+	python3 ConnectionWidget.py
+    
+> **Note:** Make sure all dependencies are installed
+
+Dependencies
+------------------
+ - [PyQt5](https://riverbankcomputing.com/software/pyqt/download5)
+ - [Jaraco Irc 13.2](https://github.com/jaraco/irc) 
