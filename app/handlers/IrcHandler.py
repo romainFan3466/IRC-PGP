@@ -1,8 +1,12 @@
 import irc.client
 from app.models.message import Message
 import threading
+import logging
+from app.core.Observer import Observable
+import time
+logging.basicConfig(level="DEBUG")
 
-class IRChandler:
+class IRChandler(Observable):
 
     host = ""
     port = ""
@@ -20,6 +24,7 @@ class IRChandler:
         self.password = password
         self.username = username
         self.__init_server()
+        self.client.add_global_handler('all_raw_messages', self.on_msg)
 
 
     def __init_server(self):
@@ -32,10 +37,10 @@ class IRChandler:
             self.client.connect(self.host, self.port, self.username,password=self.password)
         except irc.client.ServerConnectionError:
             return False
-        self.client.set_keepalive(60)
+        self.client.set_keepalive(20)
         self.process_forever = threading.Thread(target=self.__process)
         self.__signal = True
-        # self.process_forever.start()
+        self.process_forever.start()
         return True
 
 
@@ -44,21 +49,28 @@ class IRChandler:
         self.client.join(channel)
         return True
 
+
     def __process(self):
         while self.__signal:
             self.reactor.process_once(timeout=0.2)
+
+    def getUserName(self):
+        return self.username
 
     def sendMessage(self, message):
         self.client.privmsg(self.channel, message)
 
 
-    def getBuffer(self):
-        return self.client.socket.recv(1024).decode("utf-8")
+    def on_msg(self, connection, event):
+        if not "PONG" in event.arguments[0]:
+            self.notifyObserver(event.arguments[0])
+
 
     def is_connected(self):
         return self.client.is_connected()
 
     def stop(self):
+        self.client.remove_global_handler("all_raw_messages", self.on_msg)
         if self.client.is_connected():
             self.client.quit()
         if self.process_forever is not None and self.process_forever.is_alive() :
