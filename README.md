@@ -18,12 +18,11 @@ irc-client script
 
 Executable
 --------------
-An executable has been compiled and no libraries are required. 
-Unzip `ConnectionWidget.zip` then move into the folder ConnectionWidget
+An executable has been compiled and no library need to be installed.
 
-Then run the executable : 
+From the root directory, run the executable :
     
-    ./ConnectionWidget
+    ./irc-pgp
 
 
 Script
