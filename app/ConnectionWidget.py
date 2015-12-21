@@ -108,12 +108,15 @@ class ConnectionWidget(QtWidgets.QWidget):
         password = self.serverPasswordText.text()
         nick = self.nicknameText.text()
         channel = self.channelText.text()
+        if self.ircHandler is not None:
+            del self.ircHandler
 
         self.ircHandler = IRChandler(host, nick, port)
 
         if self.ircHandler.connect():
             self.ircHandler.join(channel)
             self.widget2 = ChatWidget(self, self.ircHandler)
+            self.ircHandler.addObserver(self.widget2)
             self.widget2.show()
             self.hide()
         else :

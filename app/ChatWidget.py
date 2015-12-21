@@ -10,23 +10,29 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 from app.handlers.IrcHandler import IRChandler
+from app.models.message import Message
+from app.core.Observer import Observer
 import threading
 import time
 
-class ChatWidget(QtWidgets.QWidget):
-    buffer = None
-    __signal = False
+class MessageBox(QtWidgets.QTextEdit):
+    keyPressed = QtCore.pyqtSignal()
+    def keyPressEvent(self, QKeyEvent):
+        if QKeyEvent.key() == QtCore.Qt.Key_Return:
+            self.keyPressed.emit()
+        else:
+            QtWidgets.QTextEdit.keyPressEvent(self, QKeyEvent)
+
+
+class ChatWidget(QtWidgets.QWidget, Observer):
 
     def __init__(self, widget, ircHandler):
         QtWidgets.QWidget.__init__(self)
         self.irc = ircHandler
         self.setupUi(self)
         self.widgetParent = widget
-        self.buffer = threading.Thread(target=self.runBuffer)
         self.__signal = True
-        self.buffer.start()
-
-
+        self.username = self.irc.getUserName()
 
 
     def setupUi(self, Widget):
@@ -41,9 +47,10 @@ class ChatWidget(QtWidgets.QWidget):
         item = QtWidgets.QListWidgetItem()
         self.usersList.addItem(item)
 
-        self.messageBox = QtWidgets.QTextEdit(Widget)
+        self.messageBox = MessageBox(Widget)
         self.messageBox.setGeometry(QtCore.QRect(30, 480, 621, 151))
         self.messageBox.setObjectName("messageBox")
+        self.messageBox.keyPressed.connect(self.sendMessage)
 
         self.sendButton = QtWidgets.QPushButton(Widget)
         self.sendButton.setGeometry(QtCore.QRect(710, 510, 99, 27))
@@ -71,10 +78,13 @@ class ChatWidget(QtWidgets.QWidget):
 
     def disconnect(self):
         self.widgetParent.show()
+        self.irc.stop()
         self.close()
+
 
     def reset(self):
         self.messageBox.clear()
+
 
     def retranslateUi(self, Widget):
         Widget.setWindowTitle( "IRC-PGP : Romain's Irc Server")
@@ -88,30 +98,30 @@ class ChatWidget(QtWidgets.QWidget):
         self.resetButton.setText( "Reset")
         self.disconnectButton.setText("Disconnect")
 
-        self.channelMessages.append("<span>Hello</span></br>")
-        self.channelMessages.append("<span>Romain</span></br>")
-        self.channelMessages.append("<span>c moi </span></br>")
 
     def sendMessage(self):
         message = self.messageBox.toPlainText()
-        self.irc.sendMessage(message)
+        if not message == '':
+            self.irc.sendMessage(message)
+            mess = '<span style="color:green; font-weight: bolder";>' + self.username + "</span>" + " : " + message
+            self.appendMessage(mess)
         self.messageBox.clear()
 
-    def runBuffer(self):
-        while self.__signal :
-            buf = self.irc.getBuffer()
-            old_buf = self.channelMessages.toPlainText()
-            if not buf == old_buf:
-                self.channelMessages.append(buf)
-            time.sleep(1)
+
+    def appendMessage(self, str):
+        self.channelMessages.append(str)
+        self.channelMessages.ensureCursorVisible()
+
+
+    def update(self, buffer):
+        if "PRIVMSG" in buffer:
+            formatted_message = Message.rawParse(buffer)
+            buffer = formatted_message["username"] + " : " + formatted_message["message"]
+
+        t = threading.Thread(target=self.appendMessage, args=(buffer,))
+        t.start()
+        t.join()
+        time.sleep(0.05)
 
     def closeEvent(self, QCloseEvent):
-        if self.buffer.isAlive():
-            self.__signal = False
-
         self.irc.stop()
-# if __name__ == "__main__":
-#     app = QtWidgets.QApplication(sys.argv)
-#     ex = ChatWidget()
-#     ex.show()
-#     sys.exit(app.exec_())
