@@ -118,10 +118,14 @@ class ChatWidget(QtWidgets.QWidget, Observer):
             formatted_message = Message.rawParse(buffer)
             buffer = formatted_message["username"] + " : " + formatted_message["message"]
 
+        if "JOIN" in buffer:
+            pass
+            # ":romain!root@172.17.0.1 JOIN :#1"
+
         t = threading.Thread(target=self.appendMessage, args=(buffer,))
         t.start()
         t.join()
-        time.sleep(0.05)
+        time.sleep(0.07)
 
     def closeEvent(self, QCloseEvent):
         self.irc.stop()
