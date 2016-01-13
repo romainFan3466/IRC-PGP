@@ -111,7 +111,7 @@ class ConnectionWidget(QtWidgets.QWidget):
         if self.ircHandler is not None:
             del self.ircHandler
 
-        self.ircHandler = IRChandler(host, nick, port)
+        self.ircHandler = IRChandler(host, nick, port, password=password)
 
         if self.ircHandler.connect():
             self.ircHandler.join(channel)
