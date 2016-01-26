@@ -1,4 +1,5 @@
 import DBcm
+import json
 from flask import Flask, request, jsonify, session
 from flask_restful import reqparse
 from functools import wraps
@@ -97,16 +98,16 @@ def api_update():
 def api_get_all():
     try:
         with DBcm.UseDatabase(DBconfig) as cursor:
-            cursor.execute(""" SELECT * FROM Users """)
+            cursor.execute(""" SELECT publicKey FROM Users """)
             data = cursor.fetchall()
             items_list = []
             for item in data:
                 i = {
-                    'Public_key': item[4],
+                    'Public_key': item[0],
                     }
-                items_list.append(items_list)
-            result = jsonify(i)
-            result.status_code = 200
+                items_list.append(i)
+            result = json.dumps(items_list)  # unable to use jsonify to return a list
+            # result.status_code = 200
         return result
 
     except Exception as e:
