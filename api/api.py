@@ -1,5 +1,4 @@
 import DBcm
-import json
 from flask import Flask, request, jsonify, session
 from flask_restful import reqparse
 from functools import wraps
@@ -36,79 +35,20 @@ def api_login():
         _userPassword = args['password']
 
         with DBcm.UseDatabase(DBconfig) as cursor:
-            cursor.execute("""SELECT * FROM Users WHERE login=%s """, (_userLogin,))
-            data = cursor.fetchall()
-            items_list = []
-            for item in data:
-                if item[3] == _userPassword:
-                    # session['logged_in'] = True
-                    i = {
-                       'User Id': item[0],
-                       'User Name': item[1],
-                        }
-                    items_list.append(i)
-                    result = jsonify(items=items_list)
-                    result.status_code = 200
-                    return result
-                else:
-                    return not_authorised(403)
-
-    except Exception as e:
-        return {'error': str(e)}
-
-
-# On api login, send new(randomly generated) public key to API and then store in DB
-@app.route('/publicKeys/update', methods=['POST', 'PUT'])
-# @check_login
-def api_update():
-    try:
-        parser = reqparse.RequestParser()
-        parser.add_argument('public_key')
-        parser.add_argument('login', help='User login name for Authentication')
-        args = parser.parse_args()
-
-        _publicKey = args['public_key']
-        _userLogin = args['login']
-
-        with DBcm.UseDatabase(DBconfig) as cursor:
-            cursor.execute(""" UPDATE Users
-                           SET publicKey = %s
-                           WHERE login = %s """, (_publicKey, _userLogin,))
-            cursor.execute(""" SELECT publicKey
-                           FROM Users
-                           WHERE publicKey = %s """, (_publicKey,))
+            cursor.execute("""SELECT idUsers
+                            FROM Users
+                            WHERE login=%s
+                            AND password=%s """, (_userLogin, _userPassword))
             data = cursor.fetchone()
             if data is not None:
-                i = {
-                    'Public_key': data[0],
-                    }
-                result = jsonify(i)
-                result.status_code = 200
+                session["logged_in"] = True
+                session["user"] = _userLogin
+                session["id"] = data["idUsers"]
+
+                return jsonify(session=session), 200
+
             else:
-                return not_acceptable(406)
-        return result
-
-    except Exception as e:
-        return {'error': str(e)}
-
-
-# Send request to the DB to retrieve all stored public keys	
-@app.route('/publicKeys/getAll', methods=['GET'])
-# @check_login
-def api_get_all():
-    try:
-        with DBcm.UseDatabase(DBconfig) as cursor:
-            cursor.execute(""" SELECT publicKey FROM Users """)
-            data = cursor.fetchall()
-            items_list = []
-            for item in data:
-                i = {
-                    'Public_key': item[0],
-                    }
-                items_list.append(i)
-            result = json.dumps(items_list)  # unable to use jsonify to return a list
-            # result.status_code = 200
-        return result
+                return jsonify(info="Bad credentials"), 200
 
     except Exception as e:
         return {'error': str(e)}
@@ -127,22 +67,21 @@ def api_connect():
         _port = args['port']
 
         with DBcm.UseDatabase(DBconfig) as cursor:
-            cursor.execute(""" INSERT INTO IrcServers (host, port)
-                           VALUES (%s, %s) """, (_host, _port,))
-            cursor.execute(""" SELECT host, port
+            cursor.execute(""" SELECT idIrcServers, host, port
                            FROM IrcServers
                            WHERE host = %s
                            AND port = %s""", (_host, _port,))
-            data = cursor.fetchall()
+            data = cursor.fetchone()
             if data is not None:
-                i = {
-                    'Host': data[0],
-                    'Port': data[1],
+                session["server_id"] = data["idIrcServers"]
+                msg = {
+                    'Id': data["idIrcServers"],
+                    'Host': data["host"],
+                    'Port': data["port"],
                     }
-            result = jsonify(ircServer=i)
-            result.status_code = 200
-
-        return result
+                return jsonify(session=msg), 200
+            else:
+                return jsonify(info="Bad credentials"), 200
 
     except Exception as e:
         return {'error': str(e)}
@@ -150,8 +89,58 @@ def api_connect():
 
 @app.route('/ircServers/join/<channel>', methods=['GET'])
 @check_login
-def api_join_channel():
-    return ""
+def api_join_channel(channel:int) -> 'html':
+    with DBcm.UseDatabase(DBconfig) as cursor:
+        cursor.execute(""" SELECT channel
+                           FROM Users
+                           WHERE channel = %s""", (channel,))
+        data = cursor.fetchone()
+        if data is not None:
+            session["channel"] = data["channel"]
+            return jsonify(session=session), 200
+        else:
+            return jsonify(info="Invalid channel")
+
+
+# Send request to the DB to retrieve all stored public keys
+@app.route('/publicKeys/getAll', methods=['GET'])
+@check_login
+def api_get_all():
+    server_id = session["server_id"]
+    channel = session["channel"]
+
+    try:
+        with DBcm.UseDatabase(DBconfig) as cursor:
+            cursor.execute(""" SELECT idUsers, publicKey
+                            FROM Users
+                            WHERE channel=%s AND idIrcServers=%s """, (channel, server_id,))
+            data = cursor.fetchall()
+
+            return jsonify(publicKeys=data), 200
+
+    except Exception as e:
+        return {'error': str(e)}
+
+
+# On api login, send new(randomly generated) public key to API and then store in DB
+@app.route('/publicKeys/update', methods=['POST', 'PUT'])
+@check_login
+def api_update():
+    try:
+        parser = reqparse.RequestParser()
+        parser.add_argument('public_key')
+        args = parser.parse_args()
+        _publicKey = args['public_key']
+        user = session["user"]
+
+        with DBcm.UseDatabase(DBconfig) as cursor:
+            cursor.execute(""" UPDATE Users
+                           SET publicKey = %s
+                           WHERE login = %s """, (_publicKey, user,))
+        return jsonify(publicKey=_publicKey)
+
+    except Exception as e:
+        return {'error': str(e)}
 
 
 @app.route('/users/logout')
@@ -190,20 +179,8 @@ def not_authorised(error=None):
     return resp
 
 
-@app.errorhandler(406)
-def not_acceptable(error=None):
-    message = {
-            'status': 406,
-            'message': 'Not Acceptable  :' + request.url,
-    }
-    resp = jsonify(message)
-    resp.status_code = 406
-
-    return resp
-
 app.error_handler_spec[None][404] = not_found
 app.error_handler_spec[None][403] = not_authorised
-app.error_handler_spec[None][406] = not_acceptable
 
 if __name__ == '__main__':
     app.run(debug=True)
