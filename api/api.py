@@ -87,7 +87,7 @@ def api_connect():
         return {'error': str(e)}
 
 
-@app.route('/ircServers/join/<channel>', methods=['GET'])
+@app.route('/ircServers/join/<int:channel>', methods=['GET'])
 @check_login
 def api_join_channel(channel:int) -> 'html':
     with DBcm.UseDatabase(DBconfig) as cursor:
@@ -145,14 +145,35 @@ def api_update():
 
 @app.route('/users/logout')
 def api_logout():  # need to erase the stored public key for this IRC Client
+    user = session["user"]
+
+    with DBcm.UseDatabase(DBconfig) as cursor:
+        cursor.execute(""" UPDATE Users
+                           SET publicKey = %s
+                           WHERE login = %s """, (None, user,))
+
     session.pop('logged_in')
-    return "GOODBYE..."
+    session.pop('user')
+    session.pop('id') # user
+    session.pop('server_id')
+    session.pop('chanel')
+    # return anything here ?
 
 
-@app.route('/errorLogs/report', methods=['POST'])
-@check_login
-def api_error_reports():
-    return ""
+# Send all errors to DB
+@app.route('/errorLogs/report', methods=['GET'])
+def log_errors():                                  # Need to get type, messageID and date
+        server_id = session["server_id"]
+
+        error_type=request.method
+        message=request.path
+        date=request.datetime
+
+        with DBcm.UseDatabase(DBconfig) as cursor:
+            _SQL = "INSERT INTO ErrorLogs (type, messageId, date, serverId) VALUES (%s, %s, %s, %s)"
+            cursor.execute(_SQL, (error_type, message, date, server_id,))
+            return " "
+        # Need to return all errors stored in DB ?
 
 
 @app.errorhandler(404)
