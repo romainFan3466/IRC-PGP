@@ -165,9 +165,9 @@ def api_logout():  # need to erase the stored public key for this IRC Client
 def log_errors():                                  # Need to get type, messageID and date
         server_id = session["server_id"]
 
-        error_type=request.method
-        message=request.path
-        date=request.datetime
+        error_type = request.method
+        message = request.path
+        date = request.datetime
 
         with DBcm.UseDatabase(DBconfig) as cursor:
             _SQL = "INSERT INTO ErrorLogs (type, messageId, date, serverId) VALUES (%s, %s, %s, %s)"
