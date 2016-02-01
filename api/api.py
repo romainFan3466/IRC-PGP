@@ -48,7 +48,7 @@ def api_login():
                 return jsonify(session=session), 200
 
             else:
-                return jsonify(info="Bad credentials"), 200
+                return jsonify(info="Bad credentials"), 400
 
     except Exception as e:
         return {'error': str(e)}
@@ -59,7 +59,7 @@ def api_login():
 def api_connect():
     try:
         parser = reqparse.RequestParser()
-        parser.add_argument('host', help="IRC Server host. Default is Romain's server host")
+        parser.add_argument('host', help="IRC Server host")
         parser.add_argument('port', help='User login name for Authentication')
         args = parser.parse_args()
 
@@ -81,7 +81,7 @@ def api_connect():
                     }
                 return jsonify(session=msg), 200
             else:
-                return jsonify(info="Bad credentials"), 200
+                return jsonify(info="Bad credentials"), 400
 
     except Exception as e:
         return {'error': str(e)}
@@ -89,7 +89,7 @@ def api_connect():
 
 @app.route('/ircServers/join/<int:channel>', methods=['GET'])
 @check_login
-def api_join_channel(channel:int) -> 'html':
+def api_join_channel(channel: int) -> 'html':
     with DBcm.UseDatabase(DBconfig) as cursor:
         cursor.execute(""" SELECT channel
                            FROM Users
@@ -109,17 +109,16 @@ def api_get_all():
     server_id = session["server_id"]
     channel = session["channel"]
 
-    try:
+    if 'server_id' & 'server_id' in session:
         with DBcm.UseDatabase(DBconfig) as cursor:
             cursor.execute(""" SELECT idUsers, publicKey
-                            FROM Users
-                            WHERE channel=%s AND idIrcServers=%s """, (channel, server_id,))
+                               FROM Users
+                               WHERE channel=%s AND idIrcServers=%s """, (channel, server_id,))
             data = cursor.fetchall()
 
             return jsonify(publicKeys=data), 200
-
-    except Exception as e:
-        return {'error': str(e)}
+    else:
+        return jsonify(info="IRC Server/Channel connection not found")
 
 
 # On api login, send new(randomly generated) public key to API and then store in DB
@@ -143,31 +142,32 @@ def api_update():
         return {'error': str(e)}
 
 
+# Remove the public key currently stored for this user
 @app.route('/users/logout')
-def api_logout():  # need to erase the stored public key for this IRC Client
+def api_logout():
     user = session["user"]
 
     with DBcm.UseDatabase(DBconfig) as cursor:
         cursor.execute(""" UPDATE Users
                            SET publicKey = %s
                            WHERE login = %s """, (None, user,))
-
-    session.pop('logged_in')
-    session.pop('user')
-    session.pop('id') # user
-    session.pop('server_id')
-    session.pop('chanel')
-    # return anything here ?
+    session.clear()
 
 
 # Send all errors to DB
-@app.route('/errorLogs/report', methods=['GET'])
-def log_errors():                                  # Need to get type, messageID and date
+@app.route('/errorLogs/report', methods=['POST'])
+def log_errors():
         server_id = session["server_id"]
 
-        error_type = request.method
-        message = request.path
-        date = request.datetime
+        parser = reqparse.RequestParser()
+        parser.add_argument('error_type')
+        parser.add_argument('message')
+        parser.add_argument('message')
+        args = parser.parse_args()
+
+        error_type = args['error_type']
+        message = args['date_time']
+        date = args['date_time']
 
         with DBcm.UseDatabase(DBconfig) as cursor:
             _SQL = "INSERT INTO ErrorLogs (type, messageId, date, serverId) VALUES (%s, %s, %s, %s)"
