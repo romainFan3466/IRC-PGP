@@ -1,3 +1,5 @@
 /documents/
 /gantt/
 /.idea/
+/api/__pycache__
+/app/__pycache__
