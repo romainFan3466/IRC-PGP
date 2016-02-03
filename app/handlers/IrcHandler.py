@@ -3,6 +3,7 @@ from app.models.message import Message
 import threading
 import logging
 from app.core.Observer import Observable
+from app.core.ircPgpError import IrcPgpConnectionError
 import time
 logging.basicConfig(level="DEBUG")
 
@@ -36,18 +37,17 @@ class IRChandler(Observable):
         try:
             self.client.connect(self.host, self.port, self.username,password=self.password)
         except irc.client.ServerConnectionError:
-            return False
-        self.client.set_keepalive(20)
-        self.process_forever = threading.Thread(target=self.__process)
-        self.__signal = True
-        self.process_forever.start()
-        return True
+            raise IrcPgpConnectionError("IRC", "connection")
+        else:
+            self.client.set_keepalive(20)
+            self.process_forever = threading.Thread(target=self.__process)
+            self.__signal = True
+            self.process_forever.start()
 
 
     def join(self, channel:str):
         self.channel = channel
         self.client.join(channel)
-        return True
 
 
     def __process(self):

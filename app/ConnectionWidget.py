@@ -12,6 +12,7 @@ import sys
 from app.ChatWidget import ChatWidget
 from app.handlers.IrcHandler import IRChandler
 from app.handlers.apiHandler import APIhandler
+from app.core.ircPgpError import IrcPgpConnectionError
 
 class ConnectionWidget(QtWidgets.QWidget):
 
@@ -88,7 +89,7 @@ class ConnectionWidget(QtWidgets.QWidget):
         self.apiPasswordText.setObjectName("apiPasswordText")
 
         self.errorLabel = QtWidgets.QLabel(self)
-        self.errorLabel.setGeometry(QtCore.QRect(300, 450, 101, 17))
+        self.errorLabel.setGeometry(QtCore.QRect(300, 450, 400, 17))
         self.errorLabel.setObjectName("errorLabel")
         self.errorLabel.setStyleSheet('color : red')
 
@@ -117,25 +118,26 @@ class ConnectionWidget(QtWidgets.QWidget):
         self.ircHandler = IRChandler(host, nick, port, password=irc_password)
         self.apiHandler = APIhandler()
 
-        if self.__connectIrc(channel) and self.__connectApi():
-            self.widget2 = ChatWidget(self, self.ircHandler, self.apiHandler)
+        # self.__connectIrc(channel)
+        self.__connectApi()
 
-            self.ircHandler.addObserver(self.widget2)
-            self.widget2.show()
-            self.hide()
-        else :
-            self.apiHandler.logout()
-            self.ircHandler.stop()
-            self.printError("Connection error")
+        self.widget2 = ChatWidget(self, self.ircHandler, self.apiHandler)
+        self.ircHandler.addObserver(self.widget2)
+        self.widget2.show()
+        self.hide()
+
 
 
 
     def __connectIrc(self, channel):
-        if self.ircHandler.connect():
+        try:
+            self.ircHandler.connect()
+        except IrcPgpConnectionError as e:
+            self.ircHandler.stop()
+            self.printError(str(e))
+        else :
             self.ircHandler.join(channel)
-            return True
-        else:
-            return False
+
 
     def __connectApi(self):
         server = self.serverText.text().split("/")
@@ -146,7 +148,13 @@ class ConnectionWidget(QtWidgets.QWidget):
 
         api_user = self.loginText.text()
         api_password = self.apiPasswordText.text()
-        return self.apiHandler.login(api_user,api_password) and self.apiHandler.connectIrcServer(nick,host,port) and self.apiHandler.joinChannel(channel)
+        try:
+            self.apiHandler.login(api_user,api_password)
+            self.apiHandler.connectIrcServer(nick,host,port)
+            self.apiHandler.joinChannel(channel)
+        except IrcPgpConnectionError as e:
+            self.printError(str(e))
+
 
     def printError(self, str):
         self.errorLabel.setText(str)

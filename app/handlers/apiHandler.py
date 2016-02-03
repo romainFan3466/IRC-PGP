@@ -1,6 +1,7 @@
 import requests
 import json
 from app import config
+from app.core.ircPgpError import IrcPgpConnectionError
 
 class APIhandler:
 
@@ -24,13 +25,17 @@ class APIhandler:
             "login" : user,
             "password" : password
         }
-        r = self.session.post(self.api_host+ "/users/login", data=credentials)
-        status_code = r.status_code
-        if status_code == 200:
-            self.states["api_logged"]  = True
-            self.user = user
-
-        return status_code == 200
+        try:
+            r = self.session.post(self.api_host+ "/users/login", data=credentials)
+        except Exception:
+            raise IrcPgpConnectionError("API", "login")
+        else:
+            status_code = r.status_code
+            if status_code == 200:
+                self.states["api_logged"]  = True
+                self.user = user
+            else:
+                raise IrcPgpConnectionError("API", "login")
 
 
     def logout(self):
@@ -42,7 +47,7 @@ class APIhandler:
 
     def connectIrcServer(self, username, host, port:int=6666):
         if not self.states["api_logged"]:
-            return False
+            raise IrcPgpConnectionError("API", "connect Irc Server")
 
         server = {
             "host": host,
@@ -58,12 +63,13 @@ class APIhandler:
             self.port = port
             self.username = username
 
-        return r.status_code == 200
+        else:
+            raise IrcPgpConnectionError("API", "connect Irc Server")
 
 
     def joinChannel(self, channel):
         if not self.states["api_logged"] or not self.states["irc_logged"]:
-            return False
+            raise IrcPgpConnectionError("API", "join")
 
         ch = str(channel).replace("#","",1)
         r = self.session.get(self.api_host+"/ircServers/join/" + ch)
@@ -72,21 +78,26 @@ class APIhandler:
             self.states["channel_joined"] = True
             self.channel = channel
 
-        return r.status_code == 200
+        else:
+            raise IrcPgpConnectionError("API", "join")
 
 
     def getAllPublicKeys(self):
         if not self.states["api_logged"] or not self.states["irc_logged"] or not self.states["channel_joined"]:
-            return False
+            raise IrcPgpConnectionError("API", "get All public Keys")
         r = self.session.get(self.api_host+"/publicKeys/getAll")
-        public_keys = r.json() if r.status_code == 200 else None
-        return public_keys
+        if r.status_code == 200:
+            return r.json()
+        else:
+            raise IrcPgpConnectionError("API", "get All public Keys")
+
 
 
     def updatePublicKey(self, public_key:str=""):
         if not self.states["api_logged"] or not self.states["irc_logged"] or not self.states["channel_joined"]:
-            return False
+            raise IrcPgpConnectionError("API", "update public key")
 
         pk = {"public_key" : public_key}
         r = self.session.post(self.api_host+"/publicKeys/update",data=pk)
-        return r.status_code == 200
+        if r.status_code != 200:
+            raise IrcPgpConnectionError("API", "update public key")
