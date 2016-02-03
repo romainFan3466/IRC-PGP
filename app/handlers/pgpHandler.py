@@ -11,11 +11,11 @@ class PgpHandler:
 
 
     def __init__(self):
-        self.generateNewPairs().exportKey("PEM")
+        self.generateNewPairs()
 
 
     def getPublicKey(self):
-        return self.RSAkey.publickey()
+        return self.RSAkey.publickey().exportKey("PEM")
 
 
     def sign(self, text:str):
