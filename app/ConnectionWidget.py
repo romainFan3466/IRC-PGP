@@ -11,10 +11,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 from app.ChatWidget import ChatWidget
 from app.handlers.IrcHandler import IRChandler
+from app.handlers.apiHandler import APIhandler
 
 class ConnectionWidget(QtWidgets.QWidget):
 
     ircHandler  = None
+    apiHandler = None
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
@@ -105,23 +107,46 @@ class ConnectionWidget(QtWidgets.QWidget):
         server = self.serverText.text().split("/")
         host = server[0]
         port = int(server[1])
-        password = self.serverPasswordText.text()
+        irc_password = self.serverPasswordText.text()
         nick = self.nicknameText.text()
         channel = self.channelText.text()
-        if self.ircHandler is not None:
-            del self.ircHandler
 
-        self.ircHandler = IRChandler(host, nick, port, password=password)
+        self.ircHandler  = None
+        self.apiHandler = None
 
-        if self.ircHandler.connect():
-            self.ircHandler.join(channel)
-            self.widget2 = ChatWidget(self, self.ircHandler)
+        self.ircHandler = IRChandler(host, nick, port, password=irc_password)
+        self.apiHandler = APIhandler()
+
+        if self.__connectIrc(channel) and self.__connectApi():
+            self.widget2 = ChatWidget(self, self.ircHandler, self.apiHandler)
+
             self.ircHandler.addObserver(self.widget2)
             self.widget2.show()
             self.hide()
         else :
+            self.apiHandler.logout()
+            self.ircHandler.stop()
             self.printError("Connection error")
 
+
+
+    def __connectIrc(self, channel):
+        if self.ircHandler.connect():
+            self.ircHandler.join(channel)
+            return True
+        else:
+            return False
+
+    def __connectApi(self):
+        server = self.serverText.text().split("/")
+        host = server[0]
+        port = int(server[1])
+        nick = self.nicknameText.text()
+        channel = self.channelText.text()
+
+        api_user = self.loginText.text()
+        api_password = self.apiPasswordText.text()
+        return self.apiHandler.login(api_user,api_password) and self.apiHandler.connectIrcServer(nick,host,port) and self.apiHandler.joinChannel(channel)
 
     def printError(self, str):
         self.errorLabel.setText(str)

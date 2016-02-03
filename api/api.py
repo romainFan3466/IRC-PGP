@@ -48,7 +48,6 @@ def api_login():
     try:
         # Parse the arguments
         parser = reqparse.RequestParser()
-        parser.add_argument('username', help='User name for irc client')
         parser.add_argument('login', help='User login name for Authentication')
         parser.add_argument('password', help='Password for Authentication')
         args = parser.parse_args()

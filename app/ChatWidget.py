@@ -9,7 +9,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
-from app.handlers.IrcHandler import IRChandler
+from app.handlers.pgpHandler import PgpHandler
 from app.models.message import Message
 from app.core.Observer import Observer
 import threading
@@ -26,14 +26,17 @@ class MessageBox(QtWidgets.QTextEdit):
 
 class ChatWidget(QtWidgets.QWidget, Observer):
 
-    def __init__(self, widget, ircHandler):
+    def __init__(self, widget, ircHandler, apiHandler):
         QtWidgets.QWidget.__init__(self)
         self.irc = ircHandler
+        self.api = apiHandler
+        self.pgp = PgpHandler()
         self.setupUi(self)
         self.widgetParent = widget
         self.__signal = True
         self.username = self.irc.getUserName()
-
+        r=self.api.updatePublicKey(self.pgp.getPublicKey())
+        print(r)
 
     def setupUi(self, Widget):
         self.setObjectName("Widget")
@@ -79,6 +82,7 @@ class ChatWidget(QtWidgets.QWidget, Observer):
     def disconnect(self):
         self.widgetParent.show()
         self.irc.stop()
+        self.api.logout()
         self.close()
 
 
@@ -101,6 +105,7 @@ class ChatWidget(QtWidgets.QWidget, Observer):
 
     def sendMessage(self):
         message = self.messageBox.toPlainText()
+
         if not message == '':
             self.irc.sendMessage(message)
             mess = '<span style="color:green; font-weight: bolder";>' + self.username + "</span>" + " : " + message
