@@ -57,6 +57,7 @@ class IRChandler(Observable):
     def getUserName(self):
         return self.username
 
+
     def sendMessage(self, message):
         self.client.privmsg(self.channel, message)
 
