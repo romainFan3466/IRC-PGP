@@ -11,7 +11,7 @@ class PgpHandler:
 
 
     def __init__(self):
-        self.generateNewPairs()
+        self.generateNewPairs().exportKey("PEM")
 
 
     def getPublicKey(self):
