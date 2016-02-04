@@ -26,6 +26,8 @@ class IRChandler(Observable):
         self.username = username
         self.__init_server()
         self.client.add_global_handler('all_raw_messages', self.on_msg)
+        self.locker = False
+
 
 
     def __init_server(self):
@@ -48,6 +50,15 @@ class IRChandler(Observable):
     def join(self, channel:str):
         self.channel = channel
         self.client.join(channel)
+        self.name_pattern = self.username + " = " + self.channel +" :"
+        self.user_process = threading.Thread(target=self.__usersProcess)
+        self.user_process.start()
+
+
+    def __usersProcess(self):
+        while self.__signal:
+            self.getUsers()
+            time.sleep(5)
 
 
     def __process(self):
@@ -57,14 +68,28 @@ class IRChandler(Observable):
     def getUserName(self):
         return self.username
 
+    def getUsers(self):
+        self.client.names()
+
+    def getNamePattern(self):
+        return self.name_pattern
+
 
     def sendMessage(self, message):
         self.client.privmsg(self.channel, message)
 
 
     def on_msg(self, connection, event):
-        if not "PONG" in event.arguments[0]:
-            self.notifyObserver(event.arguments[0])
+        while self.locker:
+            time.sleep(0.02)
+
+        self.locker = True
+        if not "PONG" in event.arguments[0] and not "End of" in event.arguments[0]:
+            method = "namelist" if self.channel != "" and self.name_pattern in event.arguments[0] else ""
+            self.notifyObserver(event.arguments[0], method)
+
+        self.locker = False
+        time.sleep(0.07)
 
 
     def is_connected(self):
