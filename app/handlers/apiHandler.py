@@ -92,7 +92,6 @@ class APIhandler:
             raise IrcPgpConnectionError("API", "get All public Keys")
 
 
-
     def updatePublicKey(self, public_key:str=""):
         if not self.states["api_logged"] or not self.states["irc_logged"] or not self.states["channel_joined"]:
             raise IrcPgpConnectionError("API", "update public key")
