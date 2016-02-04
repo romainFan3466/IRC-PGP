@@ -1,39 +1,73 @@
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Cipher import AES
 from Crypto import Random
+from app import config
+import base64, random, string
 
 #TODO : handle Message instence instead of str, bytes, long
 
+BS = config["AES_BLOCK_SIZE"]
+pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
+unpad = lambda s : s[:-ord(s[len(s)-1:])]
+
 class PgpHandler:
 
-    RSAkey = None
-    keyLength = 2048
+
+    @staticmethod
+    def exportKey(key):
+        return key.publickey().exportKey("PEM")
 
 
-    def __init__(self):
-        self.generateNewPairs()
-
-
-    def getPublicKey(self):
-        return self.RSAkey.publickey().exportKey("PEM")
-
-
-    def sign(self, text:str):
+    @staticmethod
+    def sign(key, text:str):
         hash = SHA256.new(text.encode()).digest()
-        return self.RSAkey.sign(hash, '')
+        return key.sign(hash, '')
 
 
-    def encrypt(self, text:str):
-       return self.RSAkey.publickey().encrypt(text.encode(),32)
+    @staticmethod
+    def RSAencrypt(key, text:str):
+       return key.publickey().encrypt(text.encode(),32)
 
 
-    def decrypt(self, encrypted:bytes):
-        return self.RSAkey.decrypt(encrypted).decode()
+    @staticmethod
+    def RSAdecrypt(key, encrypted:bytes):
+        return key.decrypt(encrypted).decode()
 
 
-    def verify(self, encrypted, publicKey):
-        return publicKey.verify(encrypted, publicKey)
+    @staticmethod
+    def verify(plaintext, publicKey, signature):
+        hash = SHA256.new(plaintext.encode()).digest()
+        return publicKey.verify(hash, signature)
 
-    def generateNewPairs(self):
+
+    @staticmethod
+    def generateNewPairs():
         random_generator = Random.new().read
-        self.RSAkey= RSA.generate(self.keyLength, random_generator)
+        generation = RSA.generate(config["RSA_KEY_LENGTH"], random_generator)
+        return {"private" : generation, "public" : generation.publickey()}
+
+
+    @staticmethod
+    def generateHash(key:str):
+        return  SHA256.new(key.encode()).digest()
+
+
+    @staticmethod
+    def generateKey(length):
+        return ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
+
+    @staticmethod
+    def AESencrypt(plaintext, key):
+        plaintext = pad(plaintext)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        return base64.b64encode(iv + cipher.encrypt(plaintext))
+
+
+    @staticmethod
+    def AESdecrypt(enc, key):
+        enc = base64.b64decode(enc)
+        iv = enc[:16]
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        return unpad(cipher.decrypt(enc[16:])).decode()
