@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'connect.ui'
-#
-# Created: Sun Dec 20 13:55:22 2015
-#      by: PyQt5 UI code generator 5.2.1
-#
-# WARNING! All changes made in this file will be lost!
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 from app.ChatWidget import ChatWidget
@@ -118,15 +109,13 @@ class ConnectionWidget(QtWidgets.QWidget):
         self.ircHandler = IRChandler(host, nick, port, password=irc_password)
         self.apiHandler = APIhandler()
 
-        # self.__connectIrc(channel)
+        self.__connectIrc(channel)
         self.__connectApi()
 
         self.widget2 = ChatWidget(self, self.ircHandler, self.apiHandler)
         self.ircHandler.addObserver(self.widget2)
         self.widget2.show()
         self.hide()
-
-
 
 
     def __connectIrc(self, channel):
@@ -172,6 +161,7 @@ class ConnectionWidget(QtWidgets.QWidget):
 
         self.apiPasswordLabel.setText("Password")
         self.connectButton.setText("Connect")
+
 
     def fillData(self):
         self.serverText.setText("127.0.0.1/6666")
