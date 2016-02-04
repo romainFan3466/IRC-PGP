@@ -1,14 +1,4 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'widget.ui'
-#
-# Created: Sun Dec 20 15:31:26 2015
-#      by: PyQt5 UI code generator 5.2.1
-#
-# WARNING! All changes made in this file will be lost!
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-import sys
+from PyQt5 import QtCore, QtWidgets
 from app.handlers.pgpHandler import PgpHandler
 from app.models.message import Message
 from app.core.Observer import Observer
@@ -26,17 +16,23 @@ class MessageBox(QtWidgets.QTextEdit):
 
 class ChatWidget(QtWidgets.QWidget, Observer):
 
+    keys = {"public" : "", "private" : ""}
+    api = None
+    irc = None
+    widgetParent = None
+    username=""
+
     def __init__(self, widget, ircHandler, apiHandler):
         QtWidgets.QWidget.__init__(self)
-        self.irc = ircHandler
         self.api = apiHandler
-        self.pgp = PgpHandler()
+        self.irc = ircHandler
         self.setupUi(self)
         self.widgetParent = widget
-        self.__signal = True
         self.username = self.irc.getUserName()
-        r=self.api.updatePublicKey(self.pgp.getPublicKey())
-        print(r)
+        self.key = PgpHandler.generateNewPairs()
+        self.api.updatePublicKey(PgpHandler.exportKey(self.key["public"]))
+
+
 
     def setupUi(self, Widget):
         self.setObjectName("Widget")
@@ -47,8 +43,6 @@ class ChatWidget(QtWidgets.QWidget, Observer):
         self.usersList = QtWidgets.QListWidget(Widget)
         self.usersList.setGeometry(QtCore.QRect(670, 30, 161, 381))
         self.usersList.setObjectName("usersList")
-        item = QtWidgets.QListWidgetItem()
-        self.usersList.addItem(item)
 
         self.messageBox = MessageBox(Widget)
         self.messageBox.setGeometry(QtCore.QRect(30, 480, 621, 151))
@@ -92,12 +86,6 @@ class ChatWidget(QtWidgets.QWidget, Observer):
 
     def retranslateUi(self, Widget):
         Widget.setWindowTitle( "IRC-PGP : Romain's Irc Server")
-        __sortingEnabled = self.usersList.isSortingEnabled()
-        self.usersList.setSortingEnabled(False)
-        item = self.usersList.item(0)
-        item.setText( "bots1")
-        self.usersList.setSortingEnabled(__sortingEnabled)
-
         self.sendButton.setText("Send")
         self.resetButton.setText( "Reset")
         self.disconnectButton.setText("Disconnect")
@@ -105,9 +93,11 @@ class ChatWidget(QtWidgets.QWidget, Observer):
 
     def sendMessage(self):
         message = self.messageBox.toPlainText()
-
+        keys = self.api.getAllPublicKeys()
         if not message == '':
-            self.irc.sendMessage(message)
+            m = Message(message)
+            me = m.getFinal()
+            self.irc.sendMessage(me)
             mess = '<span style="color:green; font-weight: bolder";>' + self.username + "</span>" + " : " + message
             self.appendMessage(mess)
         self.messageBox.clear()
@@ -118,19 +108,32 @@ class ChatWidget(QtWidgets.QWidget, Observer):
         self.channelMessages.ensureCursorVisible()
 
 
+
+    def updateNames(self, buffer):
+        names = Message.exportNames(buffer, self.irc.getNamePattern())
+
+        __sortingEnabled = self.usersList.isSortingEnabled()
+        self.usersList.setSortingEnabled(False)
+        self.usersList.clear()
+        for name in names:
+            item = QtWidgets.QListWidgetItem()
+            item.setText(name)
+            self.usersList.addItem(item)
+        self.usersList.setSortingEnabled(__sortingEnabled)
+
+
+
+
     def update(self, buffer):
+
         if "PRIVMSG" in buffer:
+
             formatted_message = Message.rawParse(buffer)
             buffer = formatted_message["username"] + " : " + formatted_message["message"]
-
-        if "JOIN" in buffer:
-            pass
-            # ":romain!root@172.17.0.1 JOIN :#1"
 
         t = threading.Thread(target=self.appendMessage, args=(buffer,))
         t.start()
         t.join()
-        time.sleep(0.07)
 
     def closeEvent(self, QCloseEvent):
         self.irc.stop()
