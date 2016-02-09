@@ -16,23 +16,29 @@ class PgpHandler:
 
     @staticmethod
     def exportKey(key):
-        return key.publickey().exportKey("PEM")
+        return key.exportKey("PEM")
 
 
     @staticmethod
     def sign(key, text:str):
+        if isinstance(key, str):
+            key = RSA.importKey(key)
         hash = SHA256.new(text.encode()).digest()
         return key.sign(hash, '')
 
 
     @staticmethod
     def RSAencrypt(key, text:str):
-       return key.publickey().encrypt(text.encode(),32)
+        if isinstance(key, str):
+            key = RSA.importKey(key)
+        return base64.b85encode(key.encrypt(text.encode(),32)[0])
 
 
     @staticmethod
     def RSAdecrypt(key, encrypted:bytes):
-        return key.decrypt(encrypted).decode()
+        if isinstance(key, str):
+            key = RSA.importKey(key)
+        return key.decrypt(base64.b64decode(encrypted)).decode()
 
 
     @staticmethod
