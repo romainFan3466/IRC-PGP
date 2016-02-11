@@ -167,6 +167,8 @@ class ConnectionWidget(QtWidgets.QWidget):
         self.serverText.setText("127.0.0.1/6666")
         self.nicknameText.setText("bot1")
         self.channelText.setText('#1')
+        self.loginText.setText("jen")
+        self.apiPasswordText.setText("jenpw")
 
 
 if __name__ == "__main__":

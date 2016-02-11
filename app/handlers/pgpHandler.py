@@ -7,7 +7,7 @@ import base64, random, string
 
 #TODO : handle Message instence instead of str, bytes, long
 
-BS = config["AES_BLOCK_SIZE"]
+BS = 16
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
 unpad = lambda s : s[:-ord(s[len(s)-1:])]
 
@@ -31,7 +31,7 @@ class PgpHandler:
     def RSAencrypt(key, text:str):
         if isinstance(key, str):
             key = RSA.importKey(key)
-        return base64.b85encode(key.encrypt(text.encode(),32)[0])
+        return base64.b64encode(key.encrypt(text.encode(),32)[0])
 
 
     @staticmethod
@@ -76,4 +76,5 @@ class PgpHandler:
         enc = base64.b64decode(enc)
         iv = enc[:16]
         cipher = AES.new(key, AES.MODE_CBC, iv)
-        return unpad(cipher.decrypt(enc[16:])).decode()
+        ret = unpad(cipher.decrypt(enc[16:]))
+        return ret.decode()

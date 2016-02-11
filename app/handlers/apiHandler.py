@@ -87,7 +87,7 @@ class APIhandler:
             raise IrcPgpConnectionError("API", "get All public Keys")
         r = self.session.get(self.api_host+"/publicKeys/getAll")
         if r.status_code == 200:
-            return r.json()
+            return r.json()["publicKeys"]
         else:
             raise IrcPgpConnectionError("API", "get All public Keys")
 

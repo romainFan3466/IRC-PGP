@@ -20,7 +20,7 @@ Executable
 --------------
 An executable has been compiled and no library need to be installed.
 
-From the root directory, run the executable :
+From the dist directory, run the executable :
     
     ./irc-pgp
 

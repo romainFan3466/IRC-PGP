@@ -5,6 +5,7 @@ from app.core.Observer import Observer
 import threading
 import time
 
+
 class MessageBox(QtWidgets.QTextEdit):
     keyPressed = QtCore.pyqtSignal()
     def keyPressEvent(self, QKeyEvent):
@@ -29,10 +30,8 @@ class ChatWidget(QtWidgets.QWidget, Observer):
         self.setupUi(self)
         self.widgetParent = widget
         self.username = self.irc.getUserName()
-        self.key = PgpHandler.generateNewPairs()
-        self.api.updatePublicKey(PgpHandler.exportKey(self.key["public"]))
-
-
+        self.keys = PgpHandler.generateNewPairs()
+        self.api.updatePublicKey(PgpHandler.exportKey(self.keys["public"]))
 
     def setupUi(self, Widget):
         self.setObjectName("Widget")
@@ -85,7 +84,7 @@ class ChatWidget(QtWidgets.QWidget, Observer):
 
 
     def retranslateUi(self, Widget):
-        Widget.setWindowTitle( "IRC-PGP : Romain's Irc Server")
+        Widget.setWindowTitle( "IRC-PGP : Romain's Irc Server - " + self.username)
         self.sendButton.setText("Send")
         self.resetButton.setText( "Reset")
         self.disconnectButton.setText("Disconnect")
@@ -93,14 +92,19 @@ class ChatWidget(QtWidgets.QWidget, Observer):
 
     def sendMessage(self):
         message = self.messageBox.toPlainText()
-        keys = self.api.getAllPublicKeys()
+
         if not message == '':
-            m = Message(message)
-            me = m.getFinal()
-            self.irc.sendMessage(me)
+            keys = self.api.getAllPublicKeys()
+            for key in keys:
+                m = Message(message,key["publicKey"])
+                me = m.getFinal(key["username"])
+                print(me)
+                self.irc.sendMessage(me)
             mess = '<span style="color:green; font-weight: bolder";>' + self.username + "</span>" + " : " + message
             self.appendMessage(mess)
-        self.messageBox.clear()
+            self.messageBox.clear()
+
+
 
 
     def appendMessage(self, str):
@@ -117,23 +121,30 @@ class ChatWidget(QtWidgets.QWidget, Observer):
         self.usersList.clear()
         for name in names:
             item = QtWidgets.QListWidgetItem()
-            item.setText(name)
+            txt = '@'+name if name == self.username else name
+            item.setText(txt)
             self.usersList.addItem(item)
         self.usersList.setSortingEnabled(__sortingEnabled)
-
-
 
 
     def update(self, buffer):
 
         if "PRIVMSG" in buffer:
 
-            formatted_message = Message.rawParse(buffer)
-            buffer = formatted_message["username"] + " : " + formatted_message["message"]
+            content_message = Message.rawParse(buffer)
+            decoded = Message.decode(content_message["message"])
 
-        t = threading.Thread(target=self.appendMessage, args=(buffer,))
-        t.start()
-        t.join()
+            if "to" in decoded and decoded["to"] == self.username:
+                decoded_buffer = Message.rawParse(buffer)
+                message = Message.decrypt(decoded_buffer["message"],self.keys["private"])
+                buffer = decoded_buffer["username"] + " : " + message.getPlainText()
+                t = threading.Thread(target=self.appendMessage, args=(buffer,))
+                t.start()
+                t.join()
+        else:
+            t = threading.Thread(target=self.appendMessage, args=(buffer,))
+            t.start()
+            t.join()
 
     def closeEvent(self, QCloseEvent):
         self.irc.stop()

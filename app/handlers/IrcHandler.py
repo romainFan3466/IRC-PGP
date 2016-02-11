@@ -85,7 +85,7 @@ class IRChandler(Observable):
 
         self.locker = True
         if not "PONG" in event.arguments[0] and not "End of" in event.arguments[0]:
-            method = "namelist" if self.channel != "" and self.name_pattern in event.arguments[0] else ""
+            method = "namelist" if self.channel != "" and hasattr(self,"name_pattern") and self.name_pattern in event.arguments[0] else ""
             self.notifyObserver(event.arguments[0], method)
 
         self.locker = False
