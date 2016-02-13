@@ -164,8 +164,10 @@ class ConnectionWidget(QtWidgets.QWidget):
 
 
     def fillData(self):
-        self.serverText.setText("127.0.0.1/6666")
+        # self.serverText.setText("127.0.0.1/6666")
+        self.serverText.setText("irc-pgp.romainfanara.com/6666")
         self.nicknameText.setText("bot1")
+        self.serverPasswordText.setText("project2016")
         self.channelText.setText('#1')
         self.loginText.setText("jen")
         self.apiPasswordText.setText("jenpw")

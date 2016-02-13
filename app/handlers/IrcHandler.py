@@ -50,14 +50,14 @@ class IRChandler(Observable):
     def join(self, channel:str):
         self.channel = channel
         self.client.join(channel)
-        self.name_pattern = self.username + " = " + self.channel +" :"
+        self.name_pattern = self.client.get_nickname() + " = " + self.channel +" :"
         self.user_process = threading.Thread(target=self.__usersProcess)
         self.user_process.start()
 
 
     def __usersProcess(self):
         while self.__signal:
-            self.getUsers()
+            self.client.names(channels=[self.channel])
             time.sleep(5)
 
 
@@ -68,8 +68,6 @@ class IRChandler(Observable):
     def getUserName(self):
         return self.username
 
-    def getUsers(self):
-        self.client.names()
 
     def getNamePattern(self):
         return self.name_pattern

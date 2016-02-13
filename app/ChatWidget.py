@@ -98,7 +98,6 @@ class ChatWidget(QtWidgets.QWidget, Observer):
             for key in keys:
                 m = Message(message,key["publicKey"])
                 me = m.getFinal(key["username"])
-                print(me)
                 self.irc.sendMessage(me)
             mess = '<span style="color:green; font-weight: bolder";>' + self.username + "</span>" + " : " + message
             self.appendMessage(mess)
@@ -121,7 +120,8 @@ class ChatWidget(QtWidgets.QWidget, Observer):
         self.usersList.clear()
         for name in names:
             item = QtWidgets.QListWidgetItem()
-            txt = '@'+name if name == self.username else name
+
+            txt = ('->'+name) if name == self.username else name
             item.setText(txt)
             self.usersList.addItem(item)
         self.usersList.setSortingEnabled(__sortingEnabled)
